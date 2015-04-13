@@ -1,0 +1,167 @@
+Algorithm
+
+We need to build a master cycle that runs by a timer, and runs on multiple nodes.
+	We need sync between these time cycles
+
+We then need a sleep-wake schedule. So we must start with a timesync phase, get all the nodes synced, then start with a master cycle which involves
+	Sleep
+		idle, ideally powered off
+	Wake
+		Timesync down
+		Data up
+
+The organization is 3(I)-3(I)-I. This mac merely sets up and manages the I-I-I transmissions - the remaining 4 nodes need to sort their own data collection etc out separately. 
+
+	3 	6
+	|	|
+1<=>2<=>5
+	|	|
+	4	7
+
+//TDmaC for 1
+
+while(1)
+	multiHopSync(1,2,5);
+	sleep(syncsleep);
+	data(2,1);
+	sleep(cyclesleep);
+
+//TDmaC for 2
+
+while(1)
+	multiHopSync(1,2,5);
+	timeSync(2,3);
+	timeSync(2,4);
+	sleep(syncsleep2);
+	data(4,2);
+	data(3,2);
+	data(5,2);
+	data(2,1);
+	sleep(cyclesleep2);
+
+//TDmaC for 5
+
+while(1)
+	multiHopSync(1,2,5);
+	sleep(syncsleep5);
+	timeSync(5,6);
+	timeSync(5,7);
+	data(6,5);
+	data(7,5);
+	data(5,2);
+	sleep(cyclesleep5);
+
+//TDmaC for 3 
+
+while(1)
+	timeSync(2,3);
+	sleep(syncsleep3);
+	data(3,2);
+	sleep(cyclesleep3);
+
+//Two timers  for clock correction?
+Run one in phase 1, do a multiHopSync, then allow Timer 2 to continue the rest of the code.
+
+//Listener node. Do we have one in the picture in this setup? And is it still necessary for us to broadcast those values?
+
+//Check for muddling up between DataReceive3 & 5. in the (2) file.
+
+//Timeslots
+//Assuming uniform 30 sec for data transmission
+
+A lot of this code is event driven. Time driven parts - the data cycle, the master cycle boundaries, the sleep cycle.
+
+//Max 1 grace period per transmission.
+
+//Sleep assumes tight bounds. The nodes wake up at earliest possible times.
+
+//Do we implement an abortTimeSync routine? If any of these grace periods fails to be sufficient, we can conclude that the network will not be syncing during this particular interval. In this case we can flood the network with a 'proceed to data' message; every single node resets its sleep timers;...but sleep.Problem.
+
+1
+	TMsg_12_1	160			160
+	TMsg 12_3	+20 		250
+
+	Sleep 		1630
+	Data Broad 	+1990 		2240(1880)
+
+2
+	TMsg 12_2	+10 		200
+	TMsg 12_Br	+10 		290
+
+	TMsg 25_1	+20 		340
+	TMsg 25_3	+20 		430
+
+	TMsg 23_1	+20  		520
+	TMsg 23_3	+20 		610
+
+	TMsg 24_1	+20 		700
+	TMsg 24_3	+20 		790
+
+	Sleep 		1040
+	Data 21 	Wake; +1400	2190(1830)
+
+3
+
+	TMsg 23_2 	+10 		560
+	TMsg 23_Br	+10 		650
+
+	Sleep 		1130
+	Data 32		Wake; +1490	2140(1780)
+
+4	
+
+	TMsg 24_2 	+10 		740
+	TMsg 24_Br	+10 		830
+
+	Sleep 		900
+	Data 42		Wake; +1260	2090(1730)
+
+5
+	TMsg 25_2	+10 		380
+	TMsg 25_Br	+10 		470
+
+	Sleep 		360
+	Can only sleep for min possible transmission type else would lose data
+
+	Calc as two grace periods (380 sec) + 30 sec for TMsg 25_Br to end + time diff between TMsg 25_Br and TMsg 24_Br.
+
+	TMsg 56_1	+770		1240
+	TMsg 56_3	+20 		1330
+
+	TMsg 57_1	+20 		1420
+	TMsg 57_3	+20 		1510
+
+	Sleep 		170
+	Data 52 	Wake; +530	1860+180 = 2040(1680)
+
+6
+	TMsg 56_2	+10 		1280
+	TMsg 56_Br 	+10 		1370
+
+	Sleep 		260
+	Data 65		Wake; +440 	1630+180 = 1810(1630)
+
+7
+	TMsg 57_2 	+10 		1460
+	TMsg 57_Br 	+10 		1550
+
+	Data 75		+20 		1600
+
+//Should we keep the sequential nature of the code at 1->2->5? or should we go with the flow and keep everything timer based right at the 12 interface
+
+//Most of the inconsistencies have been ironed out. Still need to change packet codes for the timesync messages.
+
+
+17/12/13 Stuff left:
+
+1. Change packet definitions in headers
+2. Change notation in 1,3,4,6,7
+3. Finalize the timings and fill them in; define sleep periods as variables at the top of each code
+4. App files change
+
+
+//All the data is being collected in the same data packet; this seems legit because each arrival of data is greeted by storage elsewhere.
+
+//Added the broadcast from the GW to the basestation
+
+//3 compiles, but the intra-code notation is abused quite a bit. The interfaces to all other nodes are correct.

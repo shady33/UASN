@@ -1,0 +1,2 @@
+COMPONENT=TMsgBeaconAppC
+include $(MAKERULES)

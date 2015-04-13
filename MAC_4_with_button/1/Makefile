@@ -1,0 +1,2 @@
+COMPONENT=TSMH1AppC
+include $(MAKERULES)
